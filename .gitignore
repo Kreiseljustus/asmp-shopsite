@@ -7,3 +7,5 @@ ignoredWaystones.json
 ignoredShops.json
 priceHistory.json
 *.log
+dist/
+.vite/

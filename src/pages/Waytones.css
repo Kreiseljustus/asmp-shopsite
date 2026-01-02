@@ -1,0 +1,115 @@
+.container {
+  max-width: 1200px;
+  margin: 24px auto 0 auto;
+  position: relative;
+  padding: 0;
+}
+
+.table-container {
+  background: rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  width: 100%;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  color: #fff;
+  flex-wrap: wrap;
+}
+
+.search-container input[type="text"] {
+  width: 100%;
+  max-width: 300px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 25px;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  transition: all 0.3s;
+  font-family: 'Minecraftia', Arial, sans-serif;
+}
+
+.search-container input[type="text"]:focus {
+  outline: none;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 1);
+}
+
+.position-container input[type="text"] {
+  max-width: 80px;
+  text-align: center;
+}
+
+.search-container label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+}
+
+.search-container select {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-family: 'Minecraftia', Arial, sans-serif;
+  transition: all 0.3s;
+  cursor: pointer;
+  margin-left: 5px;
+}
+
+.search-container select:focus {
+  outline: none;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 1);
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+th, td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+th {
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #333;
+  font-weight: bold;
+}
+
+td {
+  color: #fff;
+}
+
+tr:hover td {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+button {
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: 'Minecraftia', Arial, sans-serif;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: rgba(255, 255, 255, 1);
+}
+

@@ -1,12 +1,7 @@
-import express from 'express';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+const express = require('express');
 const app = express();
+const fs = require("fs");
+const path = require('path');
 const LOG_FILE = path.join(__dirname, 'server.log');
 
 function logToFile(level, ...args) {
@@ -65,37 +60,33 @@ app.get('/asmp', (req, res) => {
     res.redirect('/asmp/shops');
 });
 
-// These routes are now handled by React Router in the frontend
-// Keeping for backwards compatibility and visit tracking
 app.get('/asmp/shops', (req, res) => {
     console.log("GET /asmp/shops opened");
     incrementVisit('shops');
-    // In production, React Router handles this
-    if (process.env.NODE_ENV === 'production') {
-        res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-    } else {
-        res.redirect('/');
-    }
+    // Read the HTML template from index.html
+    let html = fs.readFileSync(__dirname + '/index.html', 'utf-8');
+    // Inject items, priceHistory, and news as JSON into the template
+    html = html.replace('<!--ITEMS_JSON-->', JSON.stringify(items));
+    html = html.replace('<!--NEWS_JSON-->', JSON.stringify(news));
+    res.send(html);
 });
 
 app.get('/asmp/waytones', (req, res) => {
     console.log("GET /asmp/waytones opened");
     incrementVisit('waytones');
-    if (process.env.NODE_ENV === 'production') {
-        res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-    } else {
-        res.redirect('/');
-    }
+    let html = fs.readFileSync(__dirname + '/waytones.html', 'utf-8');
+    html = html.replace('<!--WAYSTONES_JSON-->', JSON.stringify(waystones));
+    html = html.replace('<!--NEWS_JSON-->', JSON.stringify(news));
+    res.send(html);
 });
 
 app.get('/asmp/graphs', (req, res) => {
     console.log("GET /asmp/graphs opened");
     incrementVisit('graphs');
-    if (process.env.NODE_ENV === 'production') {
-        res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-    } else {
-        res.redirect('/');
-    }
+    let html = fs.readFileSync(__dirname + '/graphs.html', 'utf-8');
+    html = html.replace('<!--NEWS_JSON-->', JSON.stringify(news));
+    html = html.replace('<!--GRAPHS_JSON-->', JSON.stringify(graphs));
+    res.send(html);
 });
 
 app.get('/asmp/waystones', (req, res) => {
@@ -112,11 +103,6 @@ app.get('/asmp/api/waystones', (req, res) => {
 app.get('/asmp/api/shops', (req, res) => {
     console.log("GET /asmp/api/shops opened");
     res.json(items);
-});
-
-app.get('/asmp/api/news', (req, res) => {
-    console.log("GET /asmp/api/news opened");
-    res.json(news);
 });
 
 app.get('/asmp/api/graphs', (req, res) => {
@@ -148,7 +134,11 @@ app.post('/asmp/api/graphs', (req, res) => {
 app.post('/asmp/post', (req, res) => {
     console.log("POST /asmp/post with body:", JSON.stringify(req.body));
     
-    // Backwards compatibility: handle both new format { shops: [...], waystones: [...] } and old format [shops...]
+    // Backwards compatibility: handle multiple formats
+    // Old format: [shops...] (array of shops)
+    // New format: { shops: [...] } (just shops)
+    // New format: { waystones: [...] } (just waystones)
+    // New format: { shops: [...], waystones: [...] } (both)
     let shopsData = [];
     let waystonesData = [];
     
@@ -156,13 +146,23 @@ app.post('/asmp/post', (req, res) => {
         // Old format: just shops array
         shopsData = req.body;
         waystonesData = [];
-    } else if (req.body && typeof req.body === 'object' && Array.isArray(req.body.shops) && Array.isArray(req.body.waystones)) {
-        // New format: { shops: [...], waystones: [...] }
-        shopsData = req.body.shops;
-        waystonesData = req.body.waystones;
+    } else if (req.body && typeof req.body === 'object') {
+        // New format: object with shops and/or waystones
+        if (Array.isArray(req.body.shops)) {
+            shopsData = req.body.shops;
+        }
+        if (Array.isArray(req.body.waystones)) {
+            waystonesData = req.body.waystones;
+        }
+        
+        // Validate that at least one is provided
+        if (!Array.isArray(req.body.shops) && !Array.isArray(req.body.waystones)) {
+            console.log("Invalid data format: " + JSON.stringify(req.body))
+            return res.status(400).send("Invalid data format. Expected { shops: [...] }, { waystones: [...] }, { shops: [...], waystones: [...] }, or [shops...]");
+        }
     } else {
         console.log("Invalid data format: " + JSON.stringify(req.body))
-        return res.status(400).send("Invalid data format. Expected { shops: [...], waystones: [...] } or [shops...]");
+        return res.status(400).send("Invalid data format. Expected { shops: [...] }, { waystones: [...] }, { shops: [...], waystones: [...] }, or [shops...]");
     }
 
     // Filter out ignored shopsnd
@@ -312,20 +312,7 @@ app.use((req, res) => {
     `);
 });
 
-// Serve static files (React build in production, or static assets)
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'dist')));
-  // Serve React app for all non-API routes
-  app.get('*', (req, res) => {
-    if (!req.path.startsWith('/asmp/api')) {
-      res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-    }
-  });
-} else {
-  // In development, serve static assets
-  app.use(express.static(__dirname));
-  app.use('/asmp', express.static(path.join(__dirname, 'asmp')));
-}
+app.use(express.static(__dirname));
 
 app.listen(49876, () => console.log('Server running on port 49876'));
 

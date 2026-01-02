@@ -1,0 +1,93 @@
+.container {
+  max-width: 1200px;
+  margin: 24px auto 0 auto;
+  position: relative;
+  padding: 0;
+}
+
+.graph-container {
+  background: rgba(0, 0, 0, 0.8);
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  color: #fff;
+}
+
+.graph-container h1 {
+  color: #4CAF50;
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 2.5em;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.chart-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 30px 0;
+}
+
+.chart-container {
+  position: relative;
+  width: 500px;
+  height: 500px;
+  max-width: 100%;
+}
+
+.stats-container {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+.stat-box {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  min-width: 150px;
+}
+
+.stat-box h3 {
+  color: #4CAF50;
+  margin-bottom: 10px;
+  font-size: 1.2em;
+}
+
+.stat-box p {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin: 0;
+}
+
+.disclaimer-container {
+  background: rgba(255, 152, 0, 0.15);
+  padding: 20px;
+  border-radius: 10px;
+  margin-top: 30px;
+  border-left: 4px solid #FF9800;
+  color: #fff;
+}
+
+.disclaimer-container h3 {
+  color: #FF9800;
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.3em;
+}
+
+.disclaimer-container p {
+  margin: 10px 0;
+  line-height: 1.6;
+  font-size: 1em;
+}
+
+.disclaimer-container .date-info {
+  font-weight: bold;
+  color: #4CAF50;
+}
+

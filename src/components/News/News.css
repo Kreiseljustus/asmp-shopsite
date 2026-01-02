@@ -1,0 +1,62 @@
+.news-container {
+  background: rgba(0, 0, 0, 0.85);
+  padding: 8px 20px;
+  margin: 0 auto;
+  max-width: 1200px;
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  position: relative;
+  z-index: 999;
+  overflow: hidden;
+  height: 42px;
+}
+
+.news-message {
+  color: #fff;
+  font-family: 'Minecraftia', Arial, sans-serif;
+  font-size: 16px;
+  margin: 0;
+  padding: 12px 0 8px 0;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  animation: newsGlow 2s ease-in-out infinite alternate;
+  position: absolute;
+  width: 100%;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: all 0.5s ease-in-out;
+}
+
+.news-message.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.news-message.next {
+  transform: translateY(-100%);
+}
+
+@keyframes newsGlow {
+  from {
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8), 0 0 5px rgba(76, 175, 80, 0.3);
+  }
+  to {
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8), 0 0 10px rgba(76, 175, 80, 0.6);
+  }
+}
+
+.news-priority-1 {
+  color: #4CAF50;
+}
+
+.news-priority-2 {
+  color: #FF9800;
+}
+
+.news-priority-3 {
+  color: #f44336;
+}
+
