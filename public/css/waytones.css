@@ -1,0 +1,8 @@
+#position-container {
+    color: #fff;
+}
+
+#position-container input {
+    max-width: 80px;
+    text-align: center;
+}

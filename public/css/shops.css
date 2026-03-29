@@ -1,0 +1,35 @@
+.advertisement {
+    position: fixed;
+    width: 200px;
+    height: 500px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s ease;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+}
+
+.advertisement:first-of-type {
+    left: 20px;
+}
+
+.advertisement:last-of-type {
+    right: 20px;
+}
+
+.advertisement:hover {
+    transform: translateY(-50%) scale(1.02);
+}
+
+.advertisement img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}

@@ -4,323 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Waytones</title>
-    <style>
-    @font-face {
-        font-family: 'Minecraftia';
-        src: url('Minecraftia-Regular.ttf') format('truetype')
-    }
-    body {
-        font-family: 'Minecraftia', Arial, sans-serif;
-        margin: 0;
-        padding: 20px;
-        position: relative;
-        min-height: 100vh;
-    }
-    body::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-image: url('/asmp/background.jpg');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        z-index: -1;
-    }
-    .navbar {
-        width: 100%;
-        background: rgba(0,0,0,0.85);
-        padding: 18px 0 12px 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    }
-    .nav-link {
-        color: #fff;
-        font-family: 'Minecraftia', Arial, sans-serif;
-        font-size: 18px;
-        text-decoration: none;
-        margin: 0 32px;
-        padding: 8px 24px;
-        border-radius: 18px;
-        transition: background 0.2s, color 0.2s, transform 0.2s;
-        background: linear-gradient(45deg, #4CAF50, #45a049);
-        font-weight: bold;
-    }
-    .nav-link:hover {
-        background: linear-gradient(45deg, #45a049, #4CAF50);
-        color: #fff;
-        transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-    }
-    .container {
-        max-width: 1200px;
-        margin: 24px auto 0 auto;
-        position: relative;
-        padding: 0;
-    }
-    .table-container {
-        background: rgba(0, 0, 0, 0.8);
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-        width: 100%;
-    }
-    table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
-        overflow: hidden;
-    }
-    th, td {
-        padding: 12px 15px;
-        text-align: left;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    th {
-        background-color: rgba(255, 255, 255, 0.9);
-        color: #333;
-        font-weight: bold;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-    th:hover {
-        background-color: rgba(255, 255, 255, 1);
-    }
-    td {
-        color: #fff;
-    }
-    tr:hover td {
-        background-color: rgba(255, 255, 255, 0.05);
-    }
-    .search-container {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 20px;
-        color: #fff;
-    }
-    #searchBar {
-        width: 100%;
-        max-width: 300px;
-        padding: 12px 20px;
-        border: none;
-        border-radius: 25px;
-        background: rgba(255, 255, 255, 0.9);
-        font-size: 16px;
-        transition: all 0.3s;
-        font-family: inherit;
-    }
-    #searchBar:focus {
-        outline: none;
-        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-        background: rgba(255, 255, 255, 1);
-    }
-    #position-container {
-        color: #fff;
-    }
-    #position-container input {
-        max-width: 80px;
-        text-align: center;
-    }
-    .contribute-btn {
-        background: linear-gradient(45deg, #4CAF50, #45a049);
-        color: white;
-        border: none;
-        padding: 12px 20px;
-        border-radius: 25px;
-        cursor: pointer;
-        font-family: 'Minecraftia', Arial, sans-serif;
-        font-size: 14px;
-        font-weight: bold;
-        transition: all 0.3s;
-        white-space: nowrap;
-    }
-    .contribute-btn:hover {
-        background: linear-gradient(45deg, #45a049, #4CAF50);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    }
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.7);
-    }
-    .modal-content {
-        background-color: rgba(0, 0, 0, 0.9);
-        margin: 15% auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 80%;
-        max-width: 800px;
-        border-radius: 10px;
-        color: white;
-    }
-    .contribute-modal-content {
-        background-color: rgba(0, 0, 0, 0.9);
-        margin: 15% auto;
-        padding: 30px;
-        border: 1px solid #888;
-        width: 80%;
-        max-width: 600px;
-        border-radius: 10px;
-        color: white;
-        text-align: center;
-    }
-    .contribute-modal-content h2 {
-        color: #4CAF50;
-        margin-bottom: 20px;
-    }
-    .contribute-modal-content p {
-        margin-bottom: 20px;
-        line-height: 1.6;
-    }
-    .modrinth-link {
-        display: inline-block;
-        background: linear-gradient(45deg, #00AF5C, #00C853);
-        color: white;
-        text-decoration: none;
-        padding: 15px 30px;
-        border-radius: 25px;
-        font-weight: bold;
-        font-size: 16px;
-        transition: all 0.3s;
-        margin-top: 10px;
-    }
-    .modrinth-link:hover {
-        background: linear-gradient(45deg, #00C853, #00AF5C);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    }
-    .close {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-        cursor: pointer;
-    }
-    .close:hover {
-        color: white;
-    }
-    button {
-        background-color: rgba(255, 255, 255, 0.9);
-        border: none;
-        padding: 5px 10px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-family: 'Minecraftia', Arial, sans-serif;
-        transition: background-color 0.3s;
-    }
-    button:hover {
-        background-color: rgba(255, 255, 255, 1);
-    }
-    .deletion-btn {
-        background: linear-gradient(45deg, #e53935, #b71c1c) !important;
-        color: white !important;
-    }
-    .deletion-btn:hover {
-        background: linear-gradient(45deg, #b71c1c, #e53935) !important;
-    }
-    .deletion-modal-content {
-        background-color: rgba(0, 0, 0, 0.9);
-        margin: 15% auto;
-        padding: 30px;
-        border: 1px solid #888;
-        width: 80%;
-        max-width: 600px;
-        border-radius: 10px;
-        color: white;
-        text-align: center;
-    }
-    .deletion-modal-content h2 {
-        color: #e53935;
-        margin-bottom: 20px;
-    }
-    .deletion-modal-content p {
-        margin-bottom: 20px;
-        line-height: 1.6;
-    }
-    .news-container {
-        background: rgba(0, 0, 0, 0.85);
-        padding: 8px 20px;
-        margin: 0 auto;
-        max-width: 1200px;
-        border-radius: 0 0 10px 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        text-align: center;
-        position: relative;
-        z-index: 999;
-        overflow: hidden;
-        height: 42px;
-    }
-    .news-message {
-        color: #fff;
-        font-family: 'Minecraftia', Arial, sans-serif;
-        font-size: 16px;
-        margin: 0;
-        padding: 12px 0 8px 0;
-        font-weight: bold;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-        animation: newsGlow 2s ease-in-out infinite alternate;
-        position: absolute;
-        width: 100%;
-        left: 0;
-        top: 0;
-        opacity: 0;
-        transform: translateY(100%);
-        transition: all 0.5s ease-in-out;
-    }
-    .news-message.active {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    .news-message.next {
-        transform: translateY(-100%);
-    }
-    @keyframes newsGlow {
-        from {
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8), 0 0 5px rgba(76, 175, 80, 0.3);
-        }
-        to {
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8), 0 0 10px rgba(76, 175, 80, 0.6);
-        }
-    }
-    .news-priority-1 {
-        color: #4CAF50;
-    }
-    .news-priority-2 {
-        color: #FF9800;
-    }
-    .news-priority-3 {
-        color: #f44336;
-    }
-    select {
-        padding: 8px 12px;
-        border: none;
-        border-radius: 15px;
-        background: rgba(255, 255, 255, 0.9);
-        font-size: 14px;
-        font-family: 'Minecraftia', Arial, sans-serif;
-        transition: all 0.3s;
-        cursor: pointer;
-    }
-    select:focus {
-        outline: none;
-        box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
-        background: rgba(255, 255, 255, 1);
-    }
-    </style>
+    <link rel="stylesheet" href="/asmp/static/css/common.css">
+    <link rel="stylesheet" href="/asmp/static/css/waytones.css">
+
 </head>
 <body>
     <nav class="navbar">
@@ -373,8 +59,8 @@
                 <span class="close" onclick="closeContributeModal()">&times;</span>
                 <h2>Contribute to ASMP Waystones</h2>
                 <p>Help us keep the waystone data up to date by automatically contributing your server's waystones!</p>
-                <p>Download the <strong>ASMP Shop Get</strong> mod from Modrinth to automatically collect and submit waystone data from your server.</p>
-                <a href="https://modrinth.com/mod/asmp-shopget" target="_blank" class="modrinth-link">
+                <p>Download the <strong>ASMP Utils</strong> mod from Modrinth to automatically collect and submit waystone data from your server.</p>
+                <a href="https://modrinth.com/mod/asmp-utils" target="_blank" class="modrinth-link">
                     Download on Modrinth
                 </a>
             </div>
@@ -479,6 +165,35 @@
         // Display news on page load
         displayNews();
 
+        function dimensionLabel(dim) {
+            if (dim == null || dim === '') return 'Unknown (how)';
+            if (typeof dim === 'string') {
+                const s = dim.toLowerCase().replace(/^minecraft:/i, '');
+                if (s === 'overworld') return 'Overworld';
+                if (s === 'the_nether' || s === 'nether') return 'Nether';
+                if (s === 'the_end' || s === 'end') return 'End';
+            }
+            const n = Number(dim);
+            if (n === -1) return 'Nether';
+            if (n === 0) return 'Overworld';
+            if (n === 1) return 'Nether';
+            if (n === 2) return 'End';
+            return 'Unknown (how)';
+        }
+
+        function waypointDimension(dim) {
+            const n = Number(dim);
+            if (n === 0 || n === 1 || n === 2) return n;
+            if (n === -1) return 1;
+            if (typeof dim === 'string') {
+                const s = dim.toLowerCase().replace(/^minecraft:/i, '');
+                if (s === 'overworld') return 0;
+                if (s === 'the_nether' || s === 'nether') return 1;
+                if (s === 'the_end' || s === 'end') return 2;
+            }
+            return 0;
+        }
+
         function parsePosition(posStr) {
             return posStr.slice(1, -1).split(',').map(Number);
         }
@@ -525,12 +240,12 @@
                 tbody.appendChild(item.row);
                 // Apply search and dimension filters after sorting
                 const query = document.getElementById("searchBar").value.toLowerCase();
-                const dimensionFilter = document.getElementById("dimensionFilter").value;
+                const dimensionFilter = document.getElementById("dimensionFilter").value.trim();
                 let text = item.row.textContent.toLowerCase();
                 let shouldShow = text.includes(query);
                 
                 if (dimensionFilter) {
-                    const dimension = item.row.cells[3].textContent;
+                    const dimension = item.row.cells[3].textContent.trim();
                     shouldShow = shouldShow && dimension === dimensionFilter;
                 }
                 
@@ -540,14 +255,14 @@
         }
         function searchWaystones() {
             const query = document.getElementById("searchBar").value.toLowerCase();
-            const dimensionFilter = document.getElementById("dimensionFilter").value;
+            const dimensionFilter = document.getElementById("dimensionFilter").value.trim();
             const rows = document.querySelectorAll("tbody tr");
             rows.forEach(row => {
                 let text = row.textContent.toLowerCase();
                 let shouldShow = text.includes(query);
                 
                 if (dimensionFilter) {
-                    const dimension = row.cells[3].textContent; // Dimension is the 4th column (index 3)
+                    const dimension = row.cells[3].textContent.trim();
                     shouldShow = shouldShow && dimension === dimensionFilter;
                 }
                 
@@ -583,19 +298,15 @@
             for (const ws of window.waystones) {
                 const tr = document.createElement('tr');
                 const owner = ws.Owner.replace(/^Owner: /, '');
-                
-                let dimension;
-                if (ws.dimension == 0) dimension = "Overworld";
-                else if (ws.dimension == 1) dimension = "Nether";
-                else if (ws.dimension == 2) dimension = "End";
-                else dimension = "Unknown (how)";
-                
+                const dimension = dimensionLabel(ws.dimension);
+                const wDim = waypointDimension(ws.dimension);
+
                 tr.innerHTML = `
                     <td>${owner}</td>
                     <td>${ws.Name}</td>
                     <td>[${ws.position.join(", ")}]</td>
                     <td>${dimension}</td>
-                    <td><button onclick="addWaypoint('${ws.Name}', ${ws.position[0]}, ${ws.position[1]}, ${ws.position[2]}, ${ws.dimension || 0})">Add Waypoint</button></td>
+                    <td><button onclick="addWaypoint('${ws.Name}', ${ws.position[0]}, ${ws.position[1]}, ${ws.position[2]}, ${wDim})">Add Waypoint</button></td>
                 `;
                 tbody.appendChild(tr);
             }

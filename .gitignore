@@ -1,9 +1,12 @@
 node_modules/
-visits.txt
 server.log
-waystones.json
-items.json
-ignoredWaystones.json
-ignoredShops.json
 priceHistory.json
 *.log
+data/visits.txt
+data/username.txt
+data/waystones.json
+data/items.json
+data/ignoredWaystones.json
+data/ignoredShops.json
+data/news.json
+data/graphs.json

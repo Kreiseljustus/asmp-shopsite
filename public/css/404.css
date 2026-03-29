@@ -1,0 +1,10 @@
+@font-face {
+    font-family: 'Minecraftia';
+    src: url('/asmp/static/fonts/Minecraftia-Regular.ttf') format('truetype');
+}
+
+body {
+    font-family: 'Minecraftia', Arial, sans-serif;
+    text-align: center;
+    padding: 50px;
+}

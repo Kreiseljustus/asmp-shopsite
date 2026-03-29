@@ -34,12 +34,18 @@ console.info = (...args) => {
 
 app.use(express.json());
 
-const FILE_PATH = "items.json";
-const WAYSTONES_PATH = "waystones.json";
-const IGNORED_WAYSTONES_PATH = "ignoredWaystones.json";
-const IGNORED_SHOPS_PATH = "ignoredShops.json";
-const NEWS_PATH = "news.json";
-const GRAPHS_PATH = "graphs.json";
+const DATA_DIR = path.join(__dirname, 'data');
+fs.mkdirSync(DATA_DIR, { recursive: true });
+app.use('/asmp/static', express.static(path.join(__dirname, 'public')));
+
+const FILE_PATH = path.join(DATA_DIR, 'items.json');
+const WAYSTONES_PATH = path.join(DATA_DIR, 'waystones.json');
+const IGNORED_WAYSTONES_PATH = path.join(DATA_DIR, 'ignoredWaystones.json');
+const IGNORED_SHOPS_PATH = path.join(DATA_DIR, 'ignoredShops.json');
+const NEWS_PATH = path.join(DATA_DIR, 'news.json');
+const GRAPHS_PATH = path.join(DATA_DIR, 'graphs.json');
+const VISITS_FILE = path.join(DATA_DIR, 'visits.txt');
+const USERNAME_FILE = path.join(DATA_DIR, 'username.txt');
 
 let items = loadItems();
 let waystones = loadWaystones();
@@ -63,8 +69,7 @@ app.get('/asmp', (req, res) => {
 app.get('/asmp/shops', (req, res) => {
     console.log("GET /asmp/shops opened");
     incrementVisit('shops');
-    // Read the HTML template from index.html
-    let html = fs.readFileSync(__dirname + '/index.html', 'utf-8');
+    let html = fs.readFileSync(path.join(__dirname, 'views', 'index.html'), 'utf-8');
     // Inject items, priceHistory, and news as JSON into the template
     html = html.replace('<!--ITEMS_JSON-->', JSON.stringify(items));
     html = html.replace('<!--NEWS_JSON-->', JSON.stringify(news));
@@ -74,7 +79,7 @@ app.get('/asmp/shops', (req, res) => {
 app.get('/asmp/waytones', (req, res) => {
     console.log("GET /asmp/waytones opened");
     incrementVisit('waytones');
-    let html = fs.readFileSync(__dirname + '/waytones.html', 'utf-8');
+    let html = fs.readFileSync(path.join(__dirname, 'views', 'waytones.html'), 'utf-8');
     html = html.replace('<!--WAYSTONES_JSON-->', JSON.stringify(waystones));
     html = html.replace('<!--NEWS_JSON-->', JSON.stringify(news));
     res.send(html);
@@ -83,7 +88,7 @@ app.get('/asmp/waytones', (req, res) => {
 app.get('/asmp/graphs', (req, res) => {
     console.log("GET /asmp/graphs opened");
     incrementVisit('graphs');
-    let html = fs.readFileSync(__dirname + '/graphs.html', 'utf-8');
+    let html = fs.readFileSync(path.join(__dirname, 'views', 'graphs.html'), 'utf-8');
     html = html.replace('<!--NEWS_JSON-->', JSON.stringify(news));
     html = html.replace('<!--GRAPHS_JSON-->', JSON.stringify(graphs));
     res.send(html);
@@ -177,7 +182,7 @@ app.post('/asmp/post', (req, res) => {
         price: item.price,
         item: item.item,
         amount: item.amount,
-        dimension: item.dimension,
+        dimension: normalizeDimension(item.dimension),
         action: item.action,
         timestamp: new Date().toISOString()
     }));
@@ -219,7 +224,7 @@ app.post('/asmp/post', (req, res) => {
                 Owner: ws.Owner,
                 Name: ws.Name,
                 position: ws.position,
-                dimension: ws.dimension
+                dimension: normalizeDimension(ws.dimension)
             });
         }
         waystones = updatedWaystones;
@@ -280,7 +285,7 @@ app.post('/asmp/api/username', (req, res) => {
         console.log(`[USERNAME FAIL] Invalid or missing username. Received body:`, req.body);
         return res.status(400).json({ success: false, message: 'Invalid or missing username.' });
     }
-    fs.appendFileSync('username.txt', username + '\n', 'utf-8');
+    fs.appendFileSync(USERNAME_FILE, username + '\n', 'utf-8');
     console.log(`[USERNAME SUCCESS] Username saved: '${username}'`);
     res.json({ success: true, message: 'Username saved.' });
 });
@@ -290,18 +295,9 @@ app.use((req, res) => {
         <!DOCTYPE html>
         <html>
         <head>
+            <meta charset="UTF-8">
             <title>Page Not Found</title>
-            <style>
-            @font-face {
-                font-family: 'Minecraftia';
-                src: url('Minecraftia-Regular.ttf') format('truetype')
-            }
-                body {
-                    font-family: 'Minecraftia', Arial, sans-serif;
-                    text-align: center;
-                    padding: 50px;
-                }
-            </style>
+            <link rel="stylesheet" href="/asmp/static/css/404.css">
         </head>
         <body>
             <h1>404 - Page Not Found</h1>
@@ -312,14 +308,52 @@ app.use((req, res) => {
     `);
 });
 
-app.use(express.static(__dirname));
-
 app.listen(49876, () => console.log('Server running on port 49876'));
+
+/**
+ * Canonical storage: 0 Overworld, 1 Nether, 2 End (matches ASMP Utils:
+ * the_nether -> 1, the_end -> 2, default -> 0).
+ * Also accepts registry strings or -1 for older/malformed payloads so existing JSON still loads.
+ */
+function normalizeDimension(d) {
+    if (d === null || d === undefined || d === '') return null;
+    if (typeof d === 'string') {
+        const s = d.toLowerCase().replace(/^minecraft:/i, '').trim();
+        if (s === 'overworld') return 0;
+        if (s === 'the_nether' || s === 'nether') return 1;
+        if (s === 'the_end' || s === 'end') return 2;
+        const n = Number(s);
+        if (!Number.isNaN(n)) return normalizeDimension(n);
+        console.warn('[dimension] unrecognized string:', d);
+        return null;
+    }
+    const n = Number(d);
+    if (Number.isNaN(n)) return null;
+    if (n === 0) return 0;
+    if (n === 1) return 1;
+    if (n === 2) return 2;
+    if (n === -1) return 1;
+    console.warn('[dimension] unrecognized number:', n);
+    return null;
+}
 
 function loadItems() {
     if (fs.existsSync(FILE_PATH)) {
         const data = fs.readFileSync(FILE_PATH, 'utf-8');
-        return JSON.parse(data);
+        const raw = JSON.parse(data);
+        let needsSave = false;
+        const next = raw.map(item => {
+            const d = normalizeDimension(item.dimension);
+            if (d !== item.dimension) {
+                needsSave = true;
+                return { ...item, dimension: d };
+            }
+            return item;
+        });
+        if (needsSave) {
+            fs.writeFileSync(FILE_PATH, JSON.stringify(next, null, 2), 'utf-8');
+        }
+        return next;
     }
     return [];
 }
@@ -332,11 +366,15 @@ function loadWaystones() {
     if (fs.existsSync(WAYSTONES_PATH)) {
         const data = fs.readFileSync(WAYSTONES_PATH, 'utf-8');
         const waystones = JSON.parse(data);
-        // Trim waystone names longer than 50 characters
         let needsSave = false;
         waystones.forEach(ws => {
             if (ws.Name && ws.Name.length > 50) {
                 ws.Name = ws.Name.slice(0, 50);
+                needsSave = true;
+            }
+            const d = normalizeDimension(ws.dimension);
+            if (d !== ws.dimension) {
+                ws.dimension = d;
                 needsSave = true;
             }
         });
@@ -392,7 +430,6 @@ function getToday() {
 }
 
 function loadVisits() {
-    const VISITS_FILE = "visits.txt";
     if (fs.existsSync(VISITS_FILE)) {
         const data = fs.readFileSync(VISITS_FILE, 'utf-8');
         try {
@@ -415,7 +452,7 @@ function loadVisits() {
 }
 
 function saveVisits(visits) {
-    fs.writeFileSync('visits.txt', JSON.stringify(visits, null, 2), 'utf-8');
+    fs.writeFileSync(VISITS_FILE, JSON.stringify(visits, null, 2), 'utf-8');
 }
 
 function incrementVisit(page) {
