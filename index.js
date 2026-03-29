@@ -10,7 +10,7 @@ function logToFile(level, ...args) {
     fs.appendFileSync(LOG_FILE, `[${timestamp}] [${level}] ${message}\n`, 'utf-8');
 }
 
-const origLog = console.log;
+/*const origLog = console.log;
 const origError = console.error;
 const origWarn = console.warn;
 const origInfo = console.info;
@@ -30,13 +30,13 @@ console.warn = (...args) => {
 console.info = (...args) => {
     logToFile('INFO', ...args);
     origInfo(...args);
-};
+};*/
 
 app.use(express.json());
 
 const DATA_DIR = path.join(__dirname, 'data');
 fs.mkdirSync(DATA_DIR, { recursive: true });
-app.use('/asmp/static', express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 const FILE_PATH = path.join(DATA_DIR, 'items.json');
 const WAYSTONES_PATH = path.join(DATA_DIR, 'waystones.json');
@@ -61,13 +61,13 @@ setInterval(() => {
     graphs = loadGraphs();
 }, 30000);
 
-app.get('/asmp', (req, res) => {
-    console.log("GET /asmp opened");
-    res.redirect('/asmp/shops');
+app.get('/', (req, res) => {
+    console.log("GET / opened");
+    res.redirect('/shops');
 });
 
-app.get('/asmp/shops', (req, res) => {
-    console.log("GET /asmp/shops opened");
+app.get('/shops', (req, res) => {
+    console.log("GET /shops opened");
     incrementVisit('shops');
     let html = fs.readFileSync(path.join(__dirname, 'views', 'index.html'), 'utf-8');
     // Inject items, priceHistory, and news as JSON into the template
@@ -76,8 +76,8 @@ app.get('/asmp/shops', (req, res) => {
     res.send(html);
 });
 
-app.get('/asmp/waytones', (req, res) => {
-    console.log("GET /asmp/waytones opened");
+app.get('/waytones', (req, res) => {
+    console.log("GET /waytones opened");
     incrementVisit('waytones');
     let html = fs.readFileSync(path.join(__dirname, 'views', 'waytones.html'), 'utf-8');
     html = html.replace('<!--WAYSTONES_JSON-->', JSON.stringify(waystones));
@@ -85,8 +85,8 @@ app.get('/asmp/waytones', (req, res) => {
     res.send(html);
 });
 
-app.get('/asmp/graphs', (req, res) => {
-    console.log("GET /asmp/graphs opened");
+app.get('/graphs', (req, res) => {
+    console.log("GET /graphs opened");
     incrementVisit('graphs');
     let html = fs.readFileSync(path.join(__dirname, 'views', 'graphs.html'), 'utf-8');
     html = html.replace('<!--NEWS_JSON-->', JSON.stringify(news));
@@ -94,29 +94,29 @@ app.get('/asmp/graphs', (req, res) => {
     res.send(html);
 });
 
-app.get('/asmp/waystones', (req, res) => {
-    console.log("GET /asmp/waystones opened");
+/*app.get('/waystones', (req, res) => {
+    console.log("GET /waystones opened");
     incrementVisit('waystones');
     res.json(waystones);
-});
+});*/
 
-app.get('/asmp/api/waystones', (req, res) => {
-    console.log("GET /asmp/api/waystones opened");
+app.get('/api/waystones', (req, res) => {
+    console.log("GET /api/waystones opened");
     res.json(waystones);
 });
 
-app.get('/asmp/api/shops', (req, res) => {
-    console.log("GET /asmp/api/shops opened");
+app.get('/api/shops', (req, res) => {
+    console.log("GET /api/shops opened");
     res.json(items);
 });
 
-app.get('/asmp/api/graphs', (req, res) => {
-    console.log("GET /asmp/api/graphs opened");
+app.get('/api/graphs', (req, res) => {
+    console.log("GET /api/graphs opened");
     res.json(graphs);
 });
 
-app.post('/asmp/api/graphs', (req, res) => {
-    console.log("POST /asmp/api/graphs with body:", JSON.stringify(req.body));
+app.post('/api/graphs', (req, res) => {
+    console.log("POST /api/graphs with body:", JSON.stringify(req.body));
     const { graph, value } = req.body;
     
     if (!graph || value === undefined) {
@@ -136,8 +136,8 @@ app.post('/asmp/api/graphs', (req, res) => {
     res.json({ success: true, message: 'Graph value updated.' });
 });
 
-app.post('/asmp/post', (req, res) => {
-    console.log("POST /asmp/post with body:", JSON.stringify(req.body));
+app.post('/api/post', (req, res) => {
+    console.log("POST /api/post with body:", JSON.stringify(req.body));
     
     // Backwards compatibility: handle multiple formats
     // Old format: [shops...] (array of shops)
@@ -234,8 +234,8 @@ app.post('/asmp/post', (req, res) => {
     res.status(200).send("Data received and stored.");
 });
 
-app.post('/asmp/api/delete', (req, res) => {
-    console.log("POST /asmp/api/delete with body:", JSON.stringify(req.body));
+app.post('/api/delete', (req, res) => {
+    console.log("POST /api/delete with body:", JSON.stringify(req.body));
     const { type, data } = req.body;
     if (!type || !data) {
         return res.status(400).json({ error: 'Missing type or data in request body.' });
@@ -279,7 +279,7 @@ app.post('/asmp/api/delete', (req, res) => {
     }
 });
 
-app.post('/asmp/api/username', (req, res) => {
+app.post('/api/username', (req, res) => {
     const { username } = req.body;
     if (typeof username !== 'string' || !username.trim()) {
         console.log(`[USERNAME FAIL] Invalid or missing username. Received body:`, req.body);
@@ -297,7 +297,7 @@ app.use((req, res) => {
         <head>
             <meta charset="UTF-8">
             <title>Page Not Found</title>
-            <link rel="stylesheet" href="/asmp/static/css/404.css">
+            <link rel="stylesheet" href="/css/404.css">
         </head>
         <body>
             <h1>404 - Page Not Found</h1>

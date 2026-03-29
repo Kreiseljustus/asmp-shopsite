@@ -10,3 +10,4 @@ data/ignoredWaystones.json
 data/ignoredShops.json
 data/news.json
 data/graphs.json
+public/asmp_version.txt
