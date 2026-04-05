@@ -177,15 +177,16 @@ app.post('/api/post', (req, res) => {
 
     // Handle shops
     let newItems = shopsData.map(item => ({
-        Owner: item.Owner,
-        position: item.position,
-        price: item.price,
-        item: item.item,
-        amount: item.amount,
-        dimension: normalizeDimension(item.dimension),
-        action: item.action,
-        timestamp: new Date().toISOString()
-    }));
+    Owner: item.Owner,
+    position: item.position,
+    price: item.price,
+    item: item.item,
+    amount: item.amount,
+    dimension: normalizeDimension(item.dimension),
+    action: item.action,
+    updateTime: new Date().toISOString(),
+    ...(item.updateTime !== undefined && { updateTime: item.updateTime })
+}));
 
     // Update existing items or add new ones
     newItems.forEach(newItem => {
