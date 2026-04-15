@@ -1,6 +1,59 @@
-<!doctype html>
-<html>
-	<body>
-		Hello!
-	</body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASMP Data Collection Info</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/info.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/shops" class="nav-link">Shops</a>
+        <a href="/waytones" class="nav-link">Waytones</a>
+        <a href="/graphs" class="nav-link">Graphs</a>
+        <a href="/statistics" class="nav-link">Statistics</a>
+        <a href="/info" class="nav-link">Info</a>
+    </nav>
+
+    <div class="container">
+        <section class="table-container info-card">
+            <h1>Data Collection Info</h1>
+            <p>This page explains what data this site stores and how it is used.</p>
+
+            <h2>Collected Data</h2>
+            <ul>
+                <li>Shop submissions: owner, item, price, amount, position, dimension, action.</li>
+                <li>Waystone submissions: owner, waystone name, position, dimension.</li>
+                <li>Statistics submissions: username, optional UUID, and Minecraft statistics JSON.</li>
+                <li>News and graph values configured by Criisel.</li>
+                <li>Basic page visit counts per day and page type.</li>
+            </ul>
+
+            <h2>How It Is Used</h2>
+            <ul>
+                <li>Shops/waystones are shown on public map/list pages.</li>
+                <li>Statistics are used to build leaderboard categories.</li>
+                <li>Visit counts are used for basic traffic tracking.</li>
+                <li>Ignored usernames are used for moderation and filtering.</li>
+            </ul>
+
+            <h2>What Is Not Collected</h2>
+            <ul>
+                <li>No passwords or authentication tokens.</li>
+                <li>No email addresses or private account details.</li>
+                <li>No client mod IP history in site data files. (IP adresses that access the site are retained for up to two weeks)</li>
+            </ul>
+
+            <h2>Data Management</h2>
+            <ul>
+                <li>Admins can replace category config and ignored-user lists via API.</li>
+                <li>If a username is ignored, their shops, waystones, and stats are removed and blocked.</li>
+                <li>Contributed data may be updated or removed when needed.</li>
+            </ul>
+
+            <h2>If you have any concerns please reach out to Criisel on discord!</h2>
+        </section>
+    </div>
+</body>
 </html>

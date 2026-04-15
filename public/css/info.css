@@ -1,0 +1,26 @@
+.info-card {
+    color: #ffffff;
+    line-height: 1.6;
+}
+
+.info-card h1 {
+    margin: 0 0 16px 0;
+}
+
+.info-card h2 {
+    margin: 22px 0 8px 0;
+    color: #8deaff;
+}
+
+.info-card p {
+    margin: 0 0 12px 0;
+}
+
+.info-card ul {
+    margin: 0;
+    padding-left: 22px;
+}
+
+.info-card li {
+    margin: 6px 0;
+}

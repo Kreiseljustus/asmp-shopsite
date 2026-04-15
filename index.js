@@ -42,6 +42,7 @@ const FILE_PATH = path.join(DATA_DIR, 'items.json');
 const WAYSTONES_PATH = path.join(DATA_DIR, 'waystones.json');
 const IGNORED_WAYSTONES_PATH = path.join(DATA_DIR, 'ignoredWaystones.json');
 const IGNORED_SHOPS_PATH = path.join(DATA_DIR, 'ignoredShops.json');
+const IGNORED_USERNAMES_PATH = path.join(DATA_DIR, 'ignoredUsernames.json');
 const NEWS_PATH = path.join(DATA_DIR, 'news.json');
 const GRAPHS_PATH = path.join(DATA_DIR, 'graphs.json');
 const VISITS_FILE = path.join(DATA_DIR, 'visits.txt');
@@ -56,14 +57,18 @@ let items = loadItems();
 let waystones = loadWaystones();
 let ignoredWaystones = loadIgnoredWaystones();
 let ignoredShops = loadIgnoredShops();
+let ignoredUsernames = loadIgnoredUsernames();
 let news = loadNews();
 let graphs = loadGraphs();
+purgeIgnoredUserData();
 setInterval(() => {
     waystones = loadWaystones();
     ignoredWaystones = loadIgnoredWaystones();
     ignoredShops = loadIgnoredShops();
+    ignoredUsernames = loadIgnoredUsernames();
     news = loadNews();
     graphs = loadGraphs();
+    purgeIgnoredUserData();
 }, 30000);
 
 app.get('/', (req, res) => {
@@ -97,6 +102,10 @@ app.get('/graphs', (req, res) => {
     html = html.replace('<!--NEWS_JSON-->', JSON.stringify(news));
     html = html.replace('<!--GRAPHS_JSON-->', JSON.stringify(graphs));
     res.send(html);
+});
+
+app.get('/info', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'info.html'));
 });
 
 app.get('/statistics', (req, res) => {
@@ -236,6 +245,8 @@ app.post('/api/shops', (req, res) => {
     shopsData = shopsData.filter(item => !isShopIgnored(item));
     // Filter out ignored waystones
     waystonesData = waystonesData.filter(ws => !isWaystoneIgnored(ws));
+    shopsData = shopsData.filter(item => !isUsernameIgnored(extractOwnerName(item.Owner)));
+    waystonesData = waystonesData.filter(ws => !isUsernameIgnored(extractOwnerName(ws.Owner)));
 
     // Handle shops
     let newItems = shopsData.map(item => ({
@@ -374,6 +385,9 @@ app.post('/api/statistics', (req, res) => {
     }
 
     const normalizedUsername = username.trim();
+    if (isUsernameIgnored(normalizedUsername)) {
+        return res.status(403).json({ success: false, message: 'Username is ignored.' });
+    }
     const normalizedUuid = typeof userUUID === 'string' ? userUUID.trim() : '';
 
     const players = loadStatisticsPlayers();
@@ -432,6 +446,31 @@ app.post('/api/statistics/categoriesUpdate', (req, res) => {
 
     fs.writeFileSync(STATISTICS_CATEGORIES_PATH, JSON.stringify(categories, null, 2), 'utf-8');
     return res.json({ success: true, message: 'Categories updated.', totalCategories: categories.length });
+});
+
+app.post('/api/statistics/ignoredUsernamesUpdate', (req, res) => {
+    const usernames = req.body;
+    if (!Array.isArray(usernames)) {
+        return res.status(400).json({ success: false, message: 'Body must be an array of usernames.' });
+    }
+
+    const normalized = usernames
+        .filter(entry => typeof entry === 'string')
+        .map(entry => entry.trim())
+        .filter(Boolean);
+
+    if (normalized.length !== usernames.length) {
+        return res.status(400).json({ success: false, message: 'All usernames must be non-empty strings.' });
+    }
+
+    fs.writeFileSync(
+        IGNORED_USERNAMES_PATH,
+        JSON.stringify(normalized, null, 2),
+        'utf-8'
+    );
+    ignoredUsernames = normalized.map(name => name.toLowerCase());
+    purgeIgnoredUserData();
+    return res.json({ success: true, message: 'Ignored usernames updated.', totalUsernames: normalized.length });
 });
 
 app.get('/api/statistics/players', (req, res) => {
@@ -566,6 +605,25 @@ function loadIgnoredShops() {
     }
     return [];
 }
+function loadIgnoredUsernames() {
+    if (!fs.existsSync(IGNORED_USERNAMES_PATH)) {
+        fs.writeFileSync(IGNORED_USERNAMES_PATH, JSON.stringify([], null, 2), 'utf-8');
+        return [];
+    }
+
+    try {
+        const data = fs.readFileSync(IGNORED_USERNAMES_PATH, 'utf-8');
+        const parsed = JSON.parse(data);
+        if (!Array.isArray(parsed)) return [];
+        return parsed
+            .filter(entry => typeof entry === 'string')
+            .map(entry => entry.trim().toLowerCase())
+            .filter(Boolean);
+    } catch (error) {
+        console.error('Failed to load ignored usernames:', error.message);
+        return [];
+    }
+}
 function isWaystoneIgnored(ws) {
     // Check by Owner+Name+position
     return ignoredWaystones.some(ignored =>
@@ -575,6 +633,33 @@ function isWaystoneIgnored(ws) {
         ignored.position.length === ws.position.length &&
         ignored.position.every((v, i) => v === ws.position[i])
     );
+}
+
+function isUsernameIgnored(username) {
+    if (typeof username !== 'string') return false;
+    return ignoredUsernames.includes(username.trim().toLowerCase());
+}
+
+function extractOwnerName(owner) {
+    if (typeof owner !== 'string') return '';
+    return owner.replace(/^owner:\s*/i, '').trim();
+}
+
+function purgeIgnoredUserData() {
+    const beforeItems = items.length;
+    const beforeWaystones = waystones.length;
+
+    items = items.filter(item => !isUsernameIgnored(extractOwnerName(item.Owner)));
+    waystones = waystones.filter(ws => !isUsernameIgnored(extractOwnerName(ws.Owner)));
+
+    if (items.length !== beforeItems) saveItems();
+    if (waystones.length !== beforeWaystones) saveWaystones();
+
+    const players = loadStatisticsPlayers();
+    const filteredPlayers = players.filter(player => !isUsernameIgnored(player.username || ''));
+    if (filteredPlayers.length !== players.length) {
+        saveStatisticsPlayers(filteredPlayers);
+    }
 }
 function isShopIgnored(shop) {
     // Check by Owner+item+position
