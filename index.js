@@ -136,8 +136,8 @@ app.post('/api/graphs', (req, res) => {
     res.json({ success: true, message: 'Graph value updated.' });
 });
 
-app.post('/api/post', (req, res) => {
-    console.log("POST /api/post with body:", JSON.stringify(req.body));
+app.post('/api/shops', (req, res) => {
+    console.log("POST /api/shops with body:", JSON.stringify(req.body));
     
     // Backwards compatibility: handle multiple formats
     // Old format: [shops...] (array of shops)
