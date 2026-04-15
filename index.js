@@ -46,6 +46,11 @@ const NEWS_PATH = path.join(DATA_DIR, 'news.json');
 const GRAPHS_PATH = path.join(DATA_DIR, 'graphs.json');
 const VISITS_FILE = path.join(DATA_DIR, 'visits.txt');
 const USERNAME_FILE = path.join(DATA_DIR, 'username.txt');
+const STATISTICS_FOLDER = path.join(DATA_DIR, 'statistics');
+const STATISTICS_CATEGORIES_PATH = path.join(STATISTICS_FOLDER, 'categories.json');
+const STATISTICS_PLAYERS_PATH = path.join(STATISTICS_FOLDER, 'players.json');
+
+ensureStatisticsFiles();
 
 let items = loadItems();
 let waystones = loadWaystones();
@@ -91,6 +96,63 @@ app.get('/graphs', (req, res) => {
     let html = fs.readFileSync(path.join(__dirname, 'views', 'graphs.html'), 'utf-8');
     html = html.replace('<!--NEWS_JSON-->', JSON.stringify(news));
     html = html.replace('<!--GRAPHS_JSON-->', JSON.stringify(graphs));
+    res.send(html);
+});
+
+app.get('/statistics', (req, res) => {
+    console.log("GET /statistics opened");
+    incrementVisit('statistics');
+
+    const { categories, rankingsBySlug } = getStatisticsData();
+    const overviewCategories = categories.map(category => {
+        const leaderboard = rankingsBySlug[category.slug] || [];
+        return {
+            ...category,
+            topEntries: leaderboard.slice(0, 3),
+            participants: leaderboard.length
+        };
+    });
+
+    let html = fs.readFileSync(path.join(__dirname, 'views', 'statistics.html'), 'utf-8');
+    html = html.replace('<!--STAT_OVERVIEW_JSON-->', JSON.stringify(overviewCategories));
+    html = html.replace('<!--STAT_DETAIL_JSON-->', JSON.stringify(null));
+    res.send(html);
+});
+
+app.get('/statistics/:categorySlug', (req, res) => {
+    const { categorySlug } = req.params;
+    console.log(`GET /statistics/${categorySlug} opened`);
+    incrementVisit('statistics');
+
+    const { categories, rankingsBySlug } = getStatisticsData();
+    const category = categories.find(c => c.slug === categorySlug);
+
+    if (!category) {
+        return res.status(404).send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Category Not Found</title>
+                <link rel="stylesheet" href="/css/404.css">
+            </head>
+            <body>
+                <h1>404 - Category Not Found</h1>
+                <p>The statistics category "${categorySlug}" does not exist.</p>
+                <p><a href="/statistics">Back to statistics</a></p>
+            </body>
+            </html>
+        `);
+    }
+
+    const detailData = {
+        ...category,
+        leaderboard: rankingsBySlug[category.slug] || []
+    };
+
+    let html = fs.readFileSync(path.join(__dirname, 'views', 'statistics.html'), 'utf-8');
+    html = html.replace('<!--STAT_OVERVIEW_JSON-->', JSON.stringify(categories));
+    html = html.replace('<!--STAT_DETAIL_JSON-->', JSON.stringify(detailData));
     res.send(html);
 });
 
@@ -291,6 +353,87 @@ app.post('/api/username', (req, res) => {
     res.json({ success: true, message: 'Username saved.' });
 });
 
+app.post('/api/statistics', (req, res) => {
+    const { username, userUUID, statisticsJson } = req.body || {};
+
+    if (typeof username !== 'string' || !username.trim()) {
+        console.log('[STATISTICS FAIL] Missing/invalid username:', req.body);
+        return res.status(400).json({ success: false, message: 'Missing or invalid username.' });
+    }
+
+    if (typeof statisticsJson !== 'string' || !statisticsJson.trim()) {
+        console.log('[STATISTICS FAIL] Missing/invalid statisticsJson for:', username);
+        return res.status(400).json({ success: false, message: 'Missing or invalid statisticsJson.' });
+    }
+
+    try {
+        JSON.parse(statisticsJson);
+    } catch (error) {
+        console.log('[STATISTICS FAIL] statisticsJson is not valid JSON:', error.message);
+        return res.status(400).json({ success: false, message: 'statisticsJson must be valid JSON.' });
+    }
+
+    const normalizedUsername = username.trim();
+    const normalizedUuid = typeof userUUID === 'string' ? userUUID.trim() : '';
+
+    const players = loadStatisticsPlayers();
+    const existingIndex = players.findIndex(player => {
+        if (normalizedUuid && typeof player.userUUID === 'string') {
+            return player.userUUID === normalizedUuid;
+        }
+        return typeof player.username === 'string' && player.username.toLowerCase() === normalizedUsername.toLowerCase();
+    });
+
+    const playerEntry = {
+        username: normalizedUsername,
+        userUUID: normalizedUuid || undefined,
+        stat_string: statisticsJson,
+        updatedAt: new Date().toISOString()
+    };
+
+    if (existingIndex >= 0) {
+        players[existingIndex] = {
+            ...players[existingIndex],
+            ...playerEntry
+        };
+    } else {
+        players.push(playerEntry);
+    }
+
+    saveStatisticsPlayers(players);
+    console.log(`[STATISTICS SUCCESS] Stored statistics for '${normalizedUsername}'`);
+    return res.json({ success: true, message: 'Statistics stored.', totalPlayers: players.length });
+});
+
+app.post('/api/statistics/categoriesUpdate', (req, res) => {
+    const categories = req.body;
+    if (!Array.isArray(categories)) {
+        return res.status(400).json({ success: false, message: 'Body must be an array of categories.' });
+    }
+
+    for (let i = 0; i < categories.length; i++) {
+        const category = categories[i];
+        if (!category || typeof category !== 'object' || Array.isArray(category)) {
+            return res.status(400).json({ success: false, message: `Category at index ${i} must be an object.` });
+        }
+        if (typeof category.title !== 'string' || !category.title.trim()) {
+            return res.status(400).json({ success: false, message: `Category at index ${i} is missing a valid title.` });
+        }
+        if (typeof category.stat !== 'string' || !category.stat.trim()) {
+            return res.status(400).json({ success: false, message: `Category at index ${i} is missing a valid stat.` });
+        }
+        if (category.description !== undefined && typeof category.description !== 'string') {
+            return res.status(400).json({ success: false, message: `Category at index ${i} has invalid description.` });
+        }
+        if (category.icon_file !== undefined && typeof category.icon_file !== 'string') {
+            return res.status(400).json({ success: false, message: `Category at index ${i} has invalid icon_file.` });
+        }
+    }
+
+    fs.writeFileSync(STATISTICS_CATEGORIES_PATH, JSON.stringify(categories, null, 2), 'utf-8');
+    return res.json({ success: true, message: 'Categories updated.', totalCategories: categories.length });
+});
+
 app.use((req, res) => {
     res.status(404).send(`
         <!DOCTYPE html>
@@ -483,4 +626,212 @@ function loadGraphs() {
 
 function saveGraphs() {
     fs.writeFileSync(GRAPHS_PATH, JSON.stringify(graphs, null, 2), 'utf-8');
+}
+
+function ensureStatisticsFiles() {
+    fs.mkdirSync(STATISTICS_FOLDER, { recursive: true });
+
+    if (!fs.existsSync(STATISTICS_CATEGORIES_PATH)) {
+        const starterCategories = [
+            {
+                title: "Cow Tipper",
+                stat: "minecraft:mob_killed_cow",
+                description: "Most cows killed",
+                icon_file: "/icons/cow_tipper.png"
+            },
+            {
+                title: "Tree Puncher",
+                stat: "minecraft:mined_minecraft:oak_log",
+                description: "Most oak logs mined",
+                icon_file: "/icons/tree_puncher.png"
+            }
+        ];
+        fs.writeFileSync(
+            STATISTICS_CATEGORIES_PATH,
+            JSON.stringify(starterCategories, null, 2),
+            'utf-8'
+        );
+    }
+
+    if (!fs.existsSync(STATISTICS_PLAYERS_PATH)) {
+        fs.writeFileSync(
+            STATISTICS_PLAYERS_PATH,
+            JSON.stringify([], null, 2),
+            'utf-8'
+        );
+    }
+}
+
+function loadStatisticsCategories() {
+    try {
+        if (!fs.existsSync(STATISTICS_CATEGORIES_PATH)) return [];
+        const raw = JSON.parse(fs.readFileSync(STATISTICS_CATEGORIES_PATH, 'utf-8'));
+        return Array.isArray(raw) ? raw : [];
+    } catch (error) {
+        console.error('Failed to load statistics categories:', error.message);
+        return [];
+    }
+}
+
+function loadStatisticsPlayers() {
+    try {
+        if (!fs.existsSync(STATISTICS_PLAYERS_PATH)) return [];
+        const raw = JSON.parse(fs.readFileSync(STATISTICS_PLAYERS_PATH, 'utf-8'));
+        return Array.isArray(raw) ? raw : [];
+    } catch (error) {
+        console.error('Failed to load statistics players:', error.message);
+        return [];
+    }
+}
+
+function saveStatisticsPlayers(players) {
+    fs.writeFileSync(
+        STATISTICS_PLAYERS_PATH,
+        JSON.stringify(Array.isArray(players) ? players : [], null, 2),
+        'utf-8'
+    );
+}
+
+function getStatisticsData() {
+    const rawCategories = loadStatisticsCategories();
+    const rawPlayers = loadStatisticsPlayers();
+    const categories = rawCategories
+        .filter(category => category && typeof category.title === 'string' && typeof category.stat === 'string')
+        .map((category, index) => ({
+            slug: buildCategorySlug(category, index),
+            title: category.title,
+            stat: category.stat,
+            description: category.description || '',
+            icon_file: category.icon_file || ''
+        }));
+
+    const rankingsBySlug = {};
+    for (const category of categories) {
+        rankingsBySlug[category.slug] = buildLeaderboard(category.stat, rawPlayers);
+    }
+
+    return { categories, rankingsBySlug };
+}
+
+function buildCategorySlug(category, index) {
+    const source = (category.slug || category.title || `category-${index + 1}`).toString();
+    const slug = source
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    return slug || `category-${index + 1}`;
+}
+
+function buildLeaderboard(statKey, players) {
+    const leaderboard = [];
+
+    for (const player of players) {
+        const username = typeof player.username === 'string' ? player.username.trim() : '';
+        if (!username) continue;
+
+        const statsMap = parseStatsMap(player.stat_string);
+        const rawValue = resolveStatValue(statsMap, statKey);
+        if (rawValue === undefined || rawValue === null) continue;
+
+        const value = Number(rawValue);
+        if (!Number.isFinite(value)) continue;
+
+        leaderboard.push({ username, value });
+    }
+
+    leaderboard.sort((a, b) => {
+        if (b.value !== a.value) return b.value - a.value;
+        return a.username.localeCompare(b.username);
+    });
+
+    return leaderboard;
+}
+
+function resolveStatValue(statsMap, statKey) {
+    if (!statsMap || typeof statsMap !== 'object') return undefined;
+    if (!statKey || typeof statKey !== 'string') return undefined;
+
+    if (statsMap[statKey] !== undefined) return statsMap[statKey];
+
+    const normalized = statKey.toLowerCase().trim();
+    if (statsMap[normalized] !== undefined) return statsMap[normalized];
+
+    const withoutPrefix = normalized.replace(/^minecraft:/, '');
+    if (statsMap[withoutPrefix] !== undefined) return statsMap[withoutPrefix];
+
+    return undefined;
+}
+
+function parseStatsMap(statString) {
+    if (statString && typeof statString === 'object' && !Array.isArray(statString)) {
+        return flattenStatObject(statString);
+    }
+
+    if (typeof statString !== 'string') return {};
+    const trimmed = statString.trim();
+    if (!trimmed) return {};
+
+    try {
+        const parsed = JSON.parse(trimmed);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            return flattenStatObject(parsed);
+        }
+    } catch (_) {}
+
+    const extracted = {};
+    const statRegex = /"?((?:minecraft:)?[a-z0-9_./-]+(?::[a-z0-9_./-]+)?)"?\s*[:=]\s*(-?\d+(?:\.\d+)?)/gi;
+    let match = statRegex.exec(trimmed);
+    while (match) {
+        extracted[match[1]] = Number(match[2]);
+        match = statRegex.exec(trimmed);
+    }
+
+    return extracted;
+}
+
+function flattenStatObject(obj, result = {}) {
+    Object.entries(obj).forEach(([key, value]) => {
+        if (typeof value === 'number') {
+            result[key] = value;
+            return;
+        }
+        if (typeof value === 'string' && value.trim() !== '' && !Number.isNaN(Number(value))) {
+            result[key] = Number(value);
+            return;
+        }
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+            if (isStatBucketKey(key)) {
+                let bucketTotal = 0;
+                Object.entries(value).forEach(([innerKey, innerValue]) => {
+                    if (typeof innerValue !== 'number' && (typeof innerValue !== 'string' || Number.isNaN(Number(innerValue)))) {
+                        return;
+                    }
+
+                    const numericValue = Number(innerValue);
+                    bucketTotal += numericValue;
+                    const canonicalInner = normalizeStatLeafKey(innerKey);
+                    result[canonicalInner] = numericValue;
+
+                    const bucketPrefixed = `minecraft:${key.replace(/^minecraft:/, '')}_${canonicalInner.replace(/^minecraft:/, '')}`;
+                    result[bucketPrefixed] = numericValue;
+                });
+                result[`minecraft:${key.replace(/^minecraft:/, '')}`] = bucketTotal;
+                return;
+            }
+
+            flattenStatObject(value, result);
+        }
+    });
+    return result;
+}
+
+function isStatBucketKey(key) {
+    const bucket = key.replace(/^minecraft:/, '');
+    return ['mined', 'crafted', 'used', 'broken', 'picked_up', 'dropped', 'killed', 'killed_by', 'custom'].includes(bucket);
+}
+
+function normalizeStatLeafKey(key) {
+    if (typeof key !== 'string') return String(key);
+    return key.startsWith('minecraft:') ? key : `minecraft:${key}`;
 }

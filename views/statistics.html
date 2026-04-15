@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASMP Statistics</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/statistics.css">
+    <script id="overview-data" type="application/json"><!--STAT_OVERVIEW_JSON--></script>
+    <script id="detail-data" type="application/json"><!--STAT_DETAIL_JSON--></script>
+    <script>
+        const overviewCategories = JSON.parse(document.getElementById('overview-data').textContent);
+        const detailCategory = JSON.parse(document.getElementById('detail-data').textContent);
+
+        function formatNumber(value) {
+            if (typeof value !== 'number' || !Number.isFinite(value)) return '-';
+            return value.toLocaleString();
+        }
+
+        function iconMarkup(iconFile, title) {
+            if (!iconFile) return '<div class="stat-icon placeholder"></div>';
+            return `<img class="stat-icon" src="${iconFile}" alt="${title} icon" onerror="this.classList.add('placeholder');this.removeAttribute('src');">`;
+        }
+
+        function renderOverview() {
+            const root = document.getElementById('overviewGrid');
+            root.innerHTML = '';
+
+            if (!Array.isArray(overviewCategories) || overviewCategories.length === 0) {
+                root.innerHTML = '<p class="empty-state">No categories configured yet. Add some in data/statistics/categories.json.</p>';
+                return;
+            }
+
+            for (const category of overviewCategories) {
+                const topEntries = Array.isArray(category.topEntries) ? category.topEntries : [];
+                const topThreeMarkup = topEntries.length > 0
+                    ? topEntries.map((entry, index) => `
+                        <div class="leader-row rank-${index + 1}">
+                            <span class="leader-label">#${index + 1}</span>
+                            <span class="leader-name">${entry.username || 'Unknown'}</span>
+                            <span class="leader-value">${formatNumber(entry.value)}</span>
+                        </div>
+                    `).join('')
+                    : `
+                        <div class="leader-row">
+                            <span class="leader-label">#1</span>
+                            <span class="leader-name">No data yet</span>
+                            <span class="leader-value">-</span>
+                        </div>
+                    `;
+
+                const card = document.createElement('article');
+                card.className = 'stat-card';
+                card.innerHTML = `
+                    ${iconMarkup(category.icon_file, category.title)}
+                    <div class="stat-content">
+                        <a class="stat-title" href="/statistics/${category.slug}">${category.title}</a>
+                        <p class="stat-description">${category.description || 'No description provided.'}</p>
+                        <div class="leaders-list">${topThreeMarkup}</div>
+                    </div>
+                `;
+                root.appendChild(card);
+            }
+        }
+
+        function renderDetail() {
+            const wrapper = document.getElementById('detailSection');
+            const tbody = document.getElementById('detailBody');
+            const title = document.getElementById('detailTitle');
+            const description = document.getElementById('detailDescription');
+
+            if (!detailCategory) {
+                wrapper.style.display = 'none';
+                return;
+            }
+
+            wrapper.style.display = 'block';
+            title.textContent = detailCategory.title;
+            description.textContent = detailCategory.description || 'No description provided.';
+            tbody.innerHTML = '';
+
+            const rows = Array.isArray(detailCategory.leaderboard) ? detailCategory.leaderboard : [];
+            if (rows.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="empty-cell">No player data for this category yet.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            rows.forEach((entry, index) => {
+                const tr = document.createElement('tr');
+                const rankClass = index < 3 ? `rank-${index + 1}` : '';
+                tr.innerHTML = `
+                    <td class="${rankClass}">${index + 1}</td>
+                    <td>${entry.username}</td>
+                    <td>${formatNumber(entry.value)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderOverview();
+            renderDetail();
+        });
+    </script>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/shops" class="nav-link">Shops</a>
+        <a href="/waytones" class="nav-link">Waytones</a>
+        <a href="/graphs" class="nav-link">Graphs</a>
+        <a href="/statistics" class="nav-link">Statistics</a>
+    </nav>
+    <div class="container">
+        <section class="table-container">
+            <h1 class="page-title">Statistics</h1>
+            <p class="page-subtitle">Top player for each category. Click a title for full leaderboard.</p>
+            <div id="overviewGrid" class="overview-grid"></div>
+        </section>
+
+        <section id="detailSection" class="table-container detail-section">
+            <div class="detail-header">
+                <h2 id="detailTitle"></h2>
+                <p id="detailDescription"></p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody id="detailBody"></tbody>
+            </table>
+        </section>
+    </div>
+</body>
+</html>

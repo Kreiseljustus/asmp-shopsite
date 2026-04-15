@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Cow Tipper",
+    "stat": "minecraft:killed_cow",
+    "description": "Most cows killed",
+    "icon_file": "/icons/cow_tipper.png"
+  },
+  {
+    "title": "Tree Puncher",
+    "stat": "minecraft:mined_oak_log",
+    "description": "Most oak logs mined",
+    "icon_file": "/icons/Oak_Sapling.png"
+  }
+]

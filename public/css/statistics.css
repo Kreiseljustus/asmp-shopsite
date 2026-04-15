@@ -1,0 +1,142 @@
+.page-title {
+    color: #ffffff;
+    margin: 0 0 10px 0;
+}
+
+.page-subtitle {
+    color: #dddddd;
+    margin: 0 0 24px 0;
+}
+
+.overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+}
+
+.stat-card {
+    display: flex;
+    gap: 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 14px;
+}
+
+.stat-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    object-fit: contain;
+    flex-shrink: 0;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+.stat-icon.placeholder {
+    background: linear-gradient(45deg, rgba(76, 175, 80, 0.35), rgba(69, 160, 73, 0.35));
+}
+
+.stat-content {
+    min-width: 0;
+    width: 100%;
+}
+
+.stat-title {
+    color: #8deaff;
+    text-decoration: underline;
+    font-size: 18px;
+    display: inline-block;
+    margin-bottom: 8px;
+}
+
+.stat-title:hover {
+    color: #b9f4ff;
+}
+
+.stat-description {
+    color: #ffffff;
+    margin: 0 0 8px 0;
+}
+
+.stat-meta {
+    color: #cccccc;
+    margin: 0 0 12px 0;
+    word-break: break-word;
+}
+
+.leader-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #ffffff;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+.leaders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.leader-label {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.leader-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.leader-value {
+    color: #f4d03f;
+    font-weight: bold;
+}
+
+.leader-row.rank-1 .leader-label,
+td.rank-1 {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.leader-row.rank-2 .leader-label,
+td.rank-2 {
+    color: #c0c0c0;
+    font-weight: bold;
+}
+
+.leader-row.rank-3 .leader-label,
+td.rank-3 {
+    color: #cd7f32;
+    font-weight: bold;
+}
+
+.detail-section {
+    margin-top: 20px;
+}
+
+.detail-header {
+    color: #ffffff;
+    margin-bottom: 16px;
+}
+
+.detail-header h2 {
+    margin: 0 0 8px 0;
+}
+
+.detail-header p {
+    margin: 6px 0;
+}
+
+.empty-state,
+.empty-cell {
+    color: #ffffff;
+    text-align: center;
+    padding: 20px 0;
+}
