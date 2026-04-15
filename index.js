@@ -32,7 +32,7 @@ console.info = (...args) => {
     origInfo(...args);
 };*/
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 const DATA_DIR = path.join(__dirname, 'data');
 fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -434,6 +434,14 @@ app.post('/api/statistics/categoriesUpdate', (req, res) => {
     return res.json({ success: true, message: 'Categories updated.', totalCategories: categories.length });
 });
 
+app.get('/api/statistics/players', (req, res) => {
+    return res.json(loadStatisticsPlayers());
+});
+
+app.get('/api/statistics/categories', (req, res) => {
+    return res.json(loadStatisticsCategories());
+});
+
 app.use((req, res) => {
     res.status(404).send(`
         <!DOCTYPE html>
@@ -450,6 +458,16 @@ app.use((req, res) => {
         </body>
         </html>
     `);
+});
+
+app.use((err, req, res, next) => {
+    if (err && err.type === 'entity.too.large') {
+        return res.status(413).json({
+            success: false,
+            message: 'MONKA, request to large :c'
+        });
+    }
+    return next(err);
 });
 
 app.listen(49876, () => console.log('Server running on port 49876'));
